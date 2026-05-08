@@ -1,32 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { rift, type AppEntry } from '../lib/api'
 import { ArrowIcon, Brand, CogIcon, Kbd, SearchIcon } from '../lib/icons'
+import { scoreEntry } from '../lib/score'
 
 type Props = { onOpenSettings: () => void }
 
-function matchScore(text: string, q: string): number {
-  if (text === q) return 1000
-  if (text.startsWith(q)) return 500 - text.length
-  const idx = text.indexOf(q)
-  if (idx >= 0) return 200 - idx - text.length / 10
-  let i = 0
-  for (const ch of text) {
-    if (ch === q[i]) i++
-    if (i === q.length) return 50 - text.length / 20
-  }
-  return -1
-}
-
-function score(entry: AppEntry, q: string): number {
-  const targets = [entry.name.toLowerCase(), ...entry.aliases.map((a) => a.toLowerCase())]
-  let best = -1
-  for (const t of targets) {
-    const s = matchScore(t, q)
-    if (s > best) best = s
-  }
-  if (best < 0) return -1
-  return best * (1 + 0.15 * Math.log(1 + entry.mruCount))
-}
+const SCORE_THRESHOLD = 0.05
 
 export function Launcher({ onOpenSettings }: Props) {
   const [apps, setApps] = useState<AppEntry[]>([])
@@ -62,8 +41,8 @@ export function Launcher({ onOpenSettings }: Props) {
         .slice(0, 50)
     }
     return apps
-      .map((a) => ({ a, s: score(a, query) }))
-      .filter((x) => x.s > 0)
+      .map((a) => ({ a, s: scoreEntry(a.name, a.aliases, query, a.mruCount) }))
+      .filter((x) => x.s > SCORE_THRESHOLD)
       .sort((x, y) => y.s - x.s)
       .map((x) => x.a)
       .slice(0, 50)

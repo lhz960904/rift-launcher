@@ -75,13 +75,36 @@ async function extractIcon(appPath: string): Promise<string | null> {
   return null
 }
 
+async function findAppsViaMdfind(): Promise<string[]> {
+  try {
+    const { stdout } = await pExecFile(
+      'mdfind',
+      ['kMDItemContentType == "com.apple.application-bundle"'],
+      { maxBuffer: 10 * 1024 * 1024 }
+    )
+    return stdout
+      .split('\n')
+      .filter(Boolean)
+      // strip nested .app inside another bundle (helpers/frameworks/embedded)
+      .filter((p) => !p.includes('.app/Contents/'))
+  } catch {
+    return []
+  }
+}
+
 async function scan(): Promise<AppEntry[]> {
-  const paths: string[] = []
-  for (const root of SEARCH_ROOTS) {
-    const found = await walkApps(root)
-    paths.push(...found)
+  const t0 = Date.now()
+  let paths = await findAppsViaMdfind()
+  let source = 'mdfind'
+  if (paths.length === 0) {
+    source = 'walk'
+    for (const root of SEARCH_ROOTS) {
+      const found = await walkApps(root)
+      paths.push(...found)
+    }
   }
   const unique = Array.from(new Set(paths))
+  console.log(`[rift] scan: ${source} found ${unique.length} apps in ${Date.now() - t0}ms`)
 
   const concurrency = 8
   const results: AppEntry[] = []
@@ -103,6 +126,7 @@ async function scan(): Promise<AppEntry[]> {
     })
   )
   results.sort((a, b) => a.name.localeCompare(b.name))
+  console.log(`[rift] scan complete: ${results.length} apps in ${Date.now() - t0}ms`)
   return results
 }
 
