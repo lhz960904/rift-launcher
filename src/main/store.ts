@@ -9,6 +9,7 @@ export type MruEntry = { count: number; lastUsed: number }
 export type SettingsShape = {
   hotkey: string
   theme: 'dark' | 'light'
+  launchAtLogin: boolean
   mru: Record<string, MruEntry>
   appAliases: Record<string, string[]>
 }
@@ -16,6 +17,7 @@ export type SettingsShape = {
 const DEFAULTS: SettingsShape = {
   hotkey: DEFAULT_HOTKEY,
   theme: 'dark',
+  launchAtLogin: false,
   mru: {},
   appAliases: {}
 }

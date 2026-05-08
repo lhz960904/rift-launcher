@@ -42,18 +42,28 @@ export const SunIcon = wrap(
 )
 export const ArrowIcon = wrap(<path d="M5 12h14M13 6l6 6-6 6" />)
 export const BackIcon = wrap(<path d="M19 12H5M11 18l-6-6 6-6" />)
+export const PowerIcon = wrap(
+  <>
+    <path d="M12 3v9" />
+    <path d="M5.6 7.4a8 8 0 1 0 12.8 0" />
+  </>
+)
 
 export function BrandMark({ size = 14 }: Props) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
-      <path
-        d="M2 2 L8 14 L14 2"
-        stroke="currentColor"
-        strokeWidth={1.6}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M5 9 L11 9" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
+      <rect width="16" height="16" rx="3.6" fill="currentColor" />
+      <text
+        x="8"
+        y="11.6"
+        textAnchor="middle"
+        fontFamily="-apple-system, Helvetica, Arial, sans-serif"
+        fontWeight="700"
+        fontSize="10.5"
+        fill="var(--panel)"
+      >
+        R
+      </text>
     </svg>
   )
 }

@@ -8,4 +8,7 @@ dist
 references/
 docs/
 release/
-build/
+
+# build/ holds packaging assets (icon.icns) — keep that, ignore the rest
+build/*
+!build/icon.icns

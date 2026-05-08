@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Settings } from '../lib/api'
-import { Brand, BackIcon, CogIcon, KeyIcon, Kbd, SunIcon } from '../lib/icons'
+import { Brand, BackIcon, CogIcon, KeyIcon, Kbd, PowerIcon, SunIcon } from '../lib/icons'
 import { eventToAccelerator, formatAccelerator } from '../lib/hotkey'
 
 type Props = {
@@ -118,6 +118,30 @@ export function SettingsView({ settings, onChange, onBack }: Props) {
               onClick={() => setTheme('light')}
             >
               Light
+            </button>
+          </div>
+        </div>
+
+        <div className="set-row">
+          <span className="gl">
+            <PowerIcon />
+          </span>
+          <div>
+            <div className="lab">Launch at login</div>
+            <div className="desc">Start Rift automatically when you log in to your Mac.</div>
+          </div>
+          <div style={{ display: 'inline-flex', gap: 6 }}>
+            <button
+              className={'chip-pick' + (settings.launchAtLogin ? ' on' : '')}
+              onClick={() => onChange({ launchAtLogin: true })}
+            >
+              On
+            </button>
+            <button
+              className={'chip-pick' + (!settings.launchAtLogin ? ' on' : '')}
+              onClick={() => onChange({ launchAtLogin: false })}
+            >
+              Off
             </button>
           </div>
         </div>

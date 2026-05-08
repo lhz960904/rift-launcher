@@ -10,7 +10,7 @@ export type AppEntry = {
   mruLastUsed: number
 }
 
-export type Settings = { hotkey: string; theme: 'dark' | 'light' }
+export type Settings = { hotkey: string; theme: 'dark' | 'light'; launchAtLogin: boolean }
 export type SetResult = { ok: boolean; error?: string }
 
 const api = {
@@ -29,6 +29,11 @@ const api = {
     const fn = () => cb()
     ipcRenderer.on('launcher:hide', fn)
     return () => ipcRenderer.off('launcher:hide', fn)
+  },
+  onOpenSettings: (cb: () => void): (() => void) => {
+    const fn = () => cb()
+    ipcRenderer.on('launcher:open-settings', fn)
+    return () => ipcRenderer.off('launcher:open-settings', fn)
   }
 }
 

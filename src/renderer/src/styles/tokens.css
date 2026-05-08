@@ -318,6 +318,10 @@ body {
 }
 
 .empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 40px 22px;
   text-align: center;
   color: var(--fg-3);

@@ -97,9 +97,6 @@ async function scan(): Promise<AppEntry[]> {
           (info['CFBundleDisplayName'] as string) ||
           (info['CFBundleName'] as string) ||
           basename(p, '.app')
-        if (info['LSUIElement'] === true || info['LSUIElement'] === 'YES') {
-          // background-only agents have no UI; skip from launcher
-        }
         const icon = await extractIcon(p)
         results.push({ id: p, name, path: p, icon, aliases: [], mruCount: 0, mruLastUsed: 0 })
       }

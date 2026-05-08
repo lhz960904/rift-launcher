@@ -17,7 +17,13 @@ export function App() {
     const offShow = rift.onShow(() => {
       setView('launcher')
     })
-    return offShow
+    const offSettings = rift.onOpenSettings(() => {
+      setView('settings')
+    })
+    return () => {
+      offShow()
+      offSettings()
+    }
   }, [])
 
   useEffect(() => {
