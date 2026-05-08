@@ -10,21 +10,30 @@ Grab the latest `.dmg` (recommended) or `.zip` from the [Releases](https://githu
 
 ### First launch — read this if Gatekeeper blocks you
 
-This build is **not yet code-signed by Apple**. The first time you open Rift, macOS will refuse with `"Rift" is damaged and can't be opened` or similar. Pick one workaround:
+This build is **not yet code-signed by Apple**. macOS will block first launch with:
 
-**Option A — GUI (recommended for non-developers)**
+> *"Apple could not verify 'Rift' is free of malware..."*
 
-1. Drag `Rift.app` into `/Applications`
-2. **Right-click** `Rift.app` → **Open** → click **Open** again in the dialog
-3. After this one-time bypass, double-click works forever
+(or on older macOS: *"Rift is damaged and can't be opened"*). Pick one workaround:
 
-**Option B — terminal one-liner**
+**Option A — terminal one-liner (recommended, works on every macOS version)**
 
 ```bash
 xattr -cr /Applications/Rift.app
 ```
 
-Removes the quarantine attribute, then double-click works immediately.
+Removes the quarantine attribute. Then double-click works immediately.
+
+**Option B — System Settings (no terminal)**
+
+1. Drag `Rift.app` to `/Applications`
+2. Double-click once (will get blocked, dismiss the dialog)
+3. Open **System Settings → Privacy & Security**
+4. Scroll to the bottom — you'll see *"Rift was blocked from use because it is not from an identified developer"*
+5. Click **Open Anyway** → enter password
+6. Double-click Rift again → click **Open** in the new dialog
+
+> Note: on macOS Sequoia (15+), the old "right-click → Open" trick no longer works. Use Option A or B.
 
 ## Usage
 
