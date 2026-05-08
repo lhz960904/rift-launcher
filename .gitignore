@@ -7,3 +7,5 @@ dist
 # external reference repos (cloned for analysis only; see docs/REFERENCES.md)
 references/
 docs/
+release/
+build/
