@@ -1,3 +1,13 @@
+/**
+ * apps.ts — pure helpers for macOS app discovery.
+ *
+ * Stateless utility module. Cache, scanning orchestration, and disk
+ * persistence live in SearchIndex (see core/SearchIndex.ts) which uses
+ * these helpers as primitives.
+ *
+ * AppEntry is the shape consumed by the renderer (includes alias/MRU
+ * enrichment). CachedEntry (in SearchIndex) is the slimmer disk format.
+ */
 import { promises as fs } from 'node:fs'
 import { existsSync } from 'node:fs'
 import { execFile } from 'node:child_process'
@@ -14,23 +24,21 @@ export type AppEntry = {
   id: string
   name: string
   path: string
-  icon: string | null  // data URL (data:image/png;base64,...)
+  icon: string | null // data URL (data:image/png;base64,...)
   aliases: string[]
   mruCount: number
   mruLastUsed: number
 }
 
-const SEARCH_ROOTS = [
+export const SEARCH_ROOTS = [
   '/Applications',
   '/System/Applications',
   '/System/Applications/Utilities',
   join(homedir(), 'Applications')
 ]
 
-let cache: AppEntry[] | null = null
-let scanning: Promise<AppEntry[]> | null = null
-
-async function walkApps(root: string, depth = 2): Promise<string[]> {
+/** Recursive walk fallback when Spotlight is unavailable. */
+export async function walkApps(root: string, depth = 2): Promise<string[]> {
   const out: string[] = []
   let entries: import('node:fs').Dirent[]
   try {
@@ -50,7 +58,10 @@ async function walkApps(root: string, depth = 2): Promise<string[]> {
   return out
 }
 
-async function readInfoPlist(appPath: string): Promise<Record<string, unknown> | null> {
+/** Parse Info.plist (handles binary plist via plutil → xml1). */
+export async function readInfoPlist(
+  appPath: string
+): Promise<Record<string, unknown> | null> {
   const xml = join(appPath, 'Contents', 'Info.plist')
   if (!existsSync(xml)) return null
   try {
@@ -65,7 +76,17 @@ async function readInfoPlist(appPath: string): Promise<Record<string, unknown> |
   }
 }
 
-async function extractIcon(appPath: string): Promise<string | null> {
+/** Resolve display name with the same precedence Finder uses. */
+export function parseAppName(path: string, info: Record<string, unknown>): string {
+  return (
+    (info['CFBundleDisplayName'] as string) ||
+    (info['CFBundleName'] as string) ||
+    basename(path, '.app')
+  )
+}
+
+/** 64x64 thumbnail via NSWorkspace → data URL. */
+export async function extractIcon(appPath: string): Promise<string | null> {
   try {
     const img = await nativeImage.createThumbnailFromPath(appPath, { width: 64, height: 64 })
     if (!img.isEmpty()) return img.toDataURL()
@@ -75,7 +96,8 @@ async function extractIcon(appPath: string): Promise<string | null> {
   return null
 }
 
-async function findAppsViaMdfind(): Promise<string[]> {
+/** Spotlight-backed app discovery (much faster than fs walk). */
+export async function findAppsViaMdfind(): Promise<string[]> {
   try {
     const { stdout } = await pExecFile(
       'mdfind',
@@ -85,78 +107,14 @@ async function findAppsViaMdfind(): Promise<string[]> {
     return stdout
       .split('\n')
       .filter(Boolean)
-      // strip nested .app inside another bundle (helpers/frameworks/embedded)
+      // Strip nested .app inside another bundle (helpers/frameworks/embedded)
       .filter((p) => !p.includes('.app/Contents/'))
   } catch {
     return []
   }
 }
 
-async function scan(): Promise<AppEntry[]> {
-  const t0 = Date.now()
-  let paths = await findAppsViaMdfind()
-  let source = 'mdfind'
-  if (paths.length === 0) {
-    source = 'walk'
-    for (const root of SEARCH_ROOTS) {
-      const found = await walkApps(root)
-      paths.push(...found)
-    }
-  }
-  const unique = Array.from(new Set(paths))
-  console.log(`[rift] scan: ${source} found ${unique.length} apps in ${Date.now() - t0}ms`)
-
-  const concurrency = 8
-  const results: AppEntry[] = []
-  let i = 0
-  await Promise.all(
-    Array.from({ length: concurrency }, async () => {
-      while (i < unique.length) {
-        const idx = i++
-        const p = unique[idx]
-        const info = await readInfoPlist(p)
-        if (!info) continue
-        const name =
-          (info['CFBundleDisplayName'] as string) ||
-          (info['CFBundleName'] as string) ||
-          basename(p, '.app')
-        const icon = await extractIcon(p)
-        results.push({ id: p, name, path: p, icon, aliases: [], mruCount: 0, mruLastUsed: 0 })
-      }
-    })
-  )
-  results.sort((a, b) => a.name.localeCompare(b.name))
-  console.log(`[rift] scan complete: ${results.length} apps in ${Date.now() - t0}ms`)
-  return results
-}
-
-async function getCachedScan(force = false): Promise<AppEntry[]> {
-  if (cache && !force) return cache
-  if (scanning) return scanning
-  scanning = scan().then((r) => {
-    cache = r
-    scanning = null
-    return r
-  })
-  return scanning
-}
-
-export async function listApps(force = false): Promise<AppEntry[]> {
-  const raw = await getCachedScan(force)
-  const settings = getSettings().store
-  const mru = settings.mru || {}
-  const aliases = settings.appAliases || {}
-  return raw.map((e) => {
-    const m = mru[e.id]
-    return {
-      ...e,
-      aliases: aliases[e.id] || [],
-      mruCount: m?.count || 0,
-      mruLastUsed: m?.lastUsed || 0
-    }
-  })
-}
-
+/** Bump MRU counter when user opens an app (write-through to settings.json). */
 export function trackOpen(appId: string): void {
   const s = getSettings()
   const mru = { ...(s.get('mru') || {}) }

@@ -11,10 +11,6 @@ import type { SettingsShape } from '../store'
  * IpcModule — single registration point for all `ipcMain.handle` calls.
  * Each handler is a thin shim over a domain module method; no business
  * logic lives here.
- *
- * v0.4.C will replace these direct invokes with a unified RPC envelope
- * (RequestId / TraceId / typed Result). Until then, keep the v0.3.x
- * channel names so renderer `lib/api.ts` doesn't have to change.
  */
 export class IpcModule implements Module {
   constructor(private reg: ModuleRegistry) {}
@@ -35,6 +31,7 @@ export class IpcModule implements Module {
       return { ok: true }
     })
     ipcMain.handle('apps:list', () => apps.list())
+    ipcMain.handle('apps:rebuild', () => apps.rebuild())
     ipcMain.handle('apps:open', (_e, p: string) => {
       shell.openPath(p)
       apps.trackOpen(p)

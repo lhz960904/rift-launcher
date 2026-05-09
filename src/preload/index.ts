@@ -15,6 +15,7 @@ export type SetResult = { ok: boolean; error?: string }
 
 const api = {
   listApps: (): Promise<AppEntry[]> => ipcRenderer.invoke('apps:list'),
+  rebuildAppIndex: (): Promise<{ count: number }> => ipcRenderer.invoke('apps:rebuild'),
   openApp: (path: string): Promise<void> => ipcRenderer.invoke('apps:open', path),
   hide: (): Promise<void> => ipcRenderer.invoke('launcher:hide'),
   getSettings: (): Promise<Settings> => ipcRenderer.invoke('settings:get'),
