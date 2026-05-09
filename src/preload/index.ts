@@ -34,7 +34,13 @@ const api = {
     const fn = () => cb()
     ipcRenderer.on('launcher:open-settings', fn)
     return () => ipcRenderer.off('launcher:open-settings', fn)
-  }
+  },
+  onUpdateReady: (cb: (info: { version: string }) => void): (() => void) => {
+    const fn = (_e: unknown, info: { version: string }) => cb(info)
+    ipcRenderer.on('launcher:update-ready', fn)
+    return () => ipcRenderer.off('launcher:update-ready', fn)
+  },
+  installUpdate: (): Promise<void> => ipcRenderer.invoke('update:install')
 }
 
 contextBridge.exposeInMainWorld('rift', api)

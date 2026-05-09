@@ -3,14 +3,18 @@ import { rift, type AppEntry } from '../lib/api'
 import { ArrowIcon, Brand, CogIcon, Kbd, SearchIcon } from '../lib/icons'
 import { scoreEntry } from '../lib/score'
 
-type Props = { onOpenSettings: () => void }
+type Props = {
+  onOpenSettings: () => void
+  updateReady: { version: string } | null
+}
 
 const SCORE_THRESHOLD = 0.05
 
-export function Launcher({ onOpenSettings }: Props) {
+export function Launcher({ onOpenSettings, updateReady }: Props) {
   const [apps, setApps] = useState<AppEntry[]>([])
   const [q, setQ] = useState('')
   const [sel, setSel] = useState(0)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -85,6 +89,35 @@ export function Launcher({ onOpenSettings }: Props) {
 
   return (
     <div className="lx" onKeyDown={onKeyDown}>
+      {updateReady && !bannerDismissed && (
+        <div
+          className="update-banner"
+          role="button"
+          tabIndex={0}
+          onClick={() => rift.installUpdate()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              rift.installUpdate()
+            }
+          }}
+        >
+          <span className="dot" />
+          <span className="text">
+            Update v{updateReady.version} ready · <strong>Click to restart</strong>
+          </span>
+          <button
+            className="close"
+            aria-label="Dismiss"
+            onClick={(e) => {
+              e.stopPropagation()
+              setBannerDismissed(true)
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
       <div className="lx-search">
         <span className="ico">
           <SearchIcon size={22} />

@@ -8,6 +8,7 @@ type View = 'launcher' | 'settings'
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [view, setView] = useState<View>('launcher')
+  const [updateReady, setUpdateReady] = useState<{ version: string } | null>(null)
 
   useEffect(() => {
     rift.getSettings().then(setSettings)
@@ -20,9 +21,13 @@ export function App() {
     const offSettings = rift.onOpenSettings(() => {
       setView('settings')
     })
+    const offUpdate = rift.onUpdateReady((info) => {
+      setUpdateReady(info)
+    })
     return () => {
       offShow()
       offSettings()
+      offUpdate()
     }
   }, [])
 
@@ -45,6 +50,7 @@ export function App() {
         console.log('[app] setView -> settings')
         setView('settings')
       }}
+      updateReady={updateReady}
     />
   ) : (
     <SettingsView

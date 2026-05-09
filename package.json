@@ -1,6 +1,6 @@
 {
   "name": "rift-launcher",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "description": "AI-native quick launcher (MVP) — Electron + React + TS",
   "author": {
@@ -22,6 +22,7 @@
     "dist:publish": "electron-vite build && electron-builder --mac --publish always"
   },
   "dependencies": {
+    "electron-updater": "^6.8.3",
     "plist": "^3.1.0"
   },
   "pnpm": {

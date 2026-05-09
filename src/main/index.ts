@@ -5,10 +5,12 @@ import {
   ipcMain,
   Menu,
   nativeImage,
+  Notification,
   screen,
   shell,
   Tray
 } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { join } from 'node:path'
 import { getSettings, DEFAULT_HOTKEY } from './store'
 import { listApps, trackOpen } from './apps'
@@ -20,6 +22,13 @@ let win: BrowserWindow | null = null
 let tray: Tray | null = null
 let registeredAccelerator: string | null = null
 let lastShownAt = 0
+
+type UpdateState = 'idle' | 'checking' | 'downloading' | 'ready'
+let updateState: UpdateState = 'idle'
+let updateVersion: string | null = null
+let lastCheckSilent = true
+let lastCheckAt = 0
+const CHECK_THROTTLE_MS = 30 * 60 * 1000
 
 // Black "R" silhouette tray icon — 16x16 (1x) + 32x32 (2x retina), padded ~30% margin to match
 // other menu bar icons. Both reps registered via nativeImage.addRepresentation so retina is sharp.
@@ -100,6 +109,11 @@ function showWindow() {
   win.moveTop()
   win.focus()
   win.webContents.send('launcher:show')
+  // Push current update state in case the renderer just mounted (after Quit/respawn).
+  if (updateState === 'ready' && updateVersion) {
+    win.webContents.send('launcher:update-ready', { version: updateVersion })
+  }
+  maybeCheckForUpdates()
   console.log('[rift] show — visible:', win.isVisible(), 'focused:', win.isFocused())
 }
 
@@ -151,6 +165,28 @@ function openSettings() {
   win?.webContents.send('launcher:open-settings')
 }
 
+function updateMenuItem(): Electron.MenuItemConstructorOptions {
+  switch (updateState) {
+    case 'checking':
+      return { label: 'Checking for updates…', enabled: false }
+    case 'downloading':
+      return {
+        label: `Downloading ${updateVersion ? `v${updateVersion}` : 'update'}…`,
+        enabled: false
+      }
+    case 'ready':
+      return {
+        label: `Restart to install${updateVersion ? ` v${updateVersion}` : ''}`,
+        click: () => autoUpdater.quitAndInstall()
+      }
+    default:
+      return {
+        label: 'Check for updates…',
+        click: () => checkForUpdates(false)
+      }
+  }
+}
+
 function rebuildTrayMenu() {
   if (!tray) return
   const menu = Menu.buildFromTemplate([
@@ -166,6 +202,8 @@ function rebuildTrayMenu() {
       click: () => openSettings()
     },
     { type: 'separator' },
+    updateMenuItem(),
+    { type: 'separator' },
     {
       label: 'Quit Rift',
       accelerator: 'Cmd+Q',
@@ -173,6 +211,78 @@ function rebuildTrayMenu() {
     }
   ])
   tray.setContextMenu(menu)
+}
+
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = true
+  autoUpdater.autoInstallOnAppQuit = true
+  autoUpdater.logger = {
+    info: (...a: unknown[]) => console.log('[updater]', ...a),
+    warn: (...a: unknown[]) => console.warn('[updater]', ...a),
+    error: (...a: unknown[]) => console.error('[updater]', ...a),
+    debug: () => {}
+  }
+
+  autoUpdater.on('checking-for-update', () => {
+    updateState = 'checking'
+    rebuildTrayMenu()
+  })
+  autoUpdater.on('update-not-available', () => {
+    updateState = 'idle'
+    rebuildTrayMenu()
+    if (!lastCheckSilent) {
+      new Notification({
+        title: 'Rift is up to date',
+        body: `Current version: ${app.getVersion()}`
+      }).show()
+    }
+  })
+  autoUpdater.on('update-available', (info) => {
+    updateState = 'downloading'
+    updateVersion = info.version
+    rebuildTrayMenu()
+  })
+  autoUpdater.on('error', (err) => {
+    updateState = 'idle'
+    rebuildTrayMenu()
+    if (!lastCheckSilent) {
+      new Notification({ title: 'Update check failed', body: err.message }).show()
+    }
+  })
+  autoUpdater.on('update-downloaded', (info) => {
+    updateState = 'ready'
+    updateVersion = info.version
+    rebuildTrayMenu()
+    win?.webContents.send('launcher:update-ready', { version: info.version })
+    new Notification({
+      title: `Rift v${info.version} ready to install`,
+      body: 'Restart Rift to apply the update.'
+    }).show()
+  })
+}
+
+function maybeCheckForUpdates() {
+  if (updateState !== 'idle') return // already checking / downloading / ready
+  if (Date.now() - lastCheckAt < CHECK_THROTTLE_MS) return
+  lastCheckAt = Date.now()
+  checkForUpdates(true)
+}
+
+function checkForUpdates(silent = true) {
+  if (!app.isPackaged) {
+    console.log('[updater] dev mode, skipping check')
+    if (!silent) {
+      new Notification({
+        title: 'Update check (dev mode)',
+        body: 'Auto-update only runs in packaged builds.'
+      }).show()
+    }
+    return
+  }
+  lastCheckSilent = silent
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.error('[updater] check failed:', err.message)
+  })
 }
 
 function createTray() {
@@ -206,12 +316,16 @@ ipcMain.handle('apps:open', (_e, p: string) => {
   hideWindow({ yieldFocus: true })
 })
 ipcMain.handle('launcher:hide', () => hideWindow({ yieldFocus: true }))
+ipcMain.handle('update:install', () => {
+  if (updateState === 'ready') autoUpdater.quitAndInstall()
+})
 
 app.whenReady().then(() => {
   if (process.platform === 'darwin') app.dock?.hide()
   Menu.setApplicationMenu(null)
   createTray()
   createWindow()
+  setupAutoUpdater()
   // Sync our setting from system state — system is source of truth.
   const sysLogin = app.getLoginItemSettings().openAtLogin
   if (getSettings().get('launchAtLogin') !== sysLogin) {
