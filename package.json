@@ -1,6 +1,6 @@
 {
   "name": "rift-launcher",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "private": true,
   "description": "AI-native quick launcher (MVP) — Electron + React + TS",
   "author": {
@@ -24,6 +24,7 @@
   "dependencies": {
     "chokidar": "^3.6.0",
     "electron-updater": "^6.8.3",
+    "is-extglob": "^2.1.1",
     "plist": "^3.1.0"
   },
   "pnpm": {
