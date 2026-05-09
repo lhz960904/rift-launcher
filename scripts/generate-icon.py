@@ -29,7 +29,7 @@ BUILD_DIR = os.path.join(PROJECT_ROOT, "build")
 ICONSET_DIR = os.path.join(BUILD_DIR, "icon.iconset")
 
 # ---- App icon parameters ----
-SQUIRCLE_RATIO = 0.80  # squircle occupies 80% of canvas (macOS Big Sur convention)
+SQUIRCLE_RATIO = 0.88  # squircle occupies 88% of canvas — between Apple-spec 80% and most third-party 92%
 BG_TL = (63, 63, 70)        # top-left gradient stop  (#3F3F46)
 BG_BR = (10, 10, 15)        # bottom-right gradient stop (#0a0a0f)
 SHINE = (255, 255, 255)
