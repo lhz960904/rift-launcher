@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Settings } from '../lib/api'
-import { Brand, BackIcon, CogIcon, KeyIcon, Kbd, PowerIcon, SunIcon } from '../lib/icons'
+import { rift, type Settings } from '../lib/api'
+import {
+  Brand,
+  BackIcon,
+  CogIcon,
+  KeyIcon,
+  Kbd,
+  PowerIcon,
+  RefreshIcon,
+  SunIcon
+} from '../lib/icons'
 import { eventToAccelerator, formatAccelerator } from '../lib/hotkey'
 
 type Props = {
@@ -12,6 +21,8 @@ type Props = {
 export function SettingsView({ settings, onChange, onBack }: Props) {
   const [recording, setRecording] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [rebuilding, setRebuilding] = useState(false)
+  const [rebuildResult, setRebuildResult] = useState<string | null>(null)
   const mountedAt = useRef(Date.now())
 
   useEffect(() => {
@@ -58,6 +69,20 @@ export function SettingsView({ settings, onChange, onBack }: Props) {
 
   const setTheme = (theme: 'dark' | 'light') => {
     onChange({ theme })
+  }
+
+  const onRebuildIndex = async () => {
+    setRebuilding(true)
+    setRebuildResult(null)
+    try {
+      const { count } = await rift.rebuildAppIndex()
+      setRebuildResult(`✓ rebuilt ${count} apps`)
+    } catch (e) {
+      setRebuildResult(`✗ ${(e as Error).message}`)
+    } finally {
+      setRebuilding(false)
+      setTimeout(() => setRebuildResult(null), 5000)
+    }
   }
 
   return (
@@ -142,6 +167,26 @@ export function SettingsView({ settings, onChange, onBack }: Props) {
               onClick={() => onChange({ launchAtLogin: false })}
             >
               Off
+            </button>
+          </div>
+        </div>
+
+        <div className="set-row">
+          <span className="gl">
+            <RefreshIcon />
+          </span>
+          <div>
+            <div className="lab">App index</div>
+            <div className="desc">
+              Rescan installed apps. Useful if some don't show up.
+            </div>
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            {rebuildResult && (
+              <span style={{ fontSize: 12, color: 'var(--fg-3)' }}>{rebuildResult}</span>
+            )}
+            <button className="chip-pick" disabled={rebuilding} onClick={onRebuildIndex}>
+              {rebuilding ? 'Rebuilding…' : 'Rebuild now'}
             </button>
           </div>
         </div>

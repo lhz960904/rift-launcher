@@ -10,24 +10,38 @@ import { IpcModule } from './modules/IpcModule'
 
 const registry = new ModuleRegistry()
 
-app.whenReady().then(async () => {
-  if (process.platform === 'darwin') app.dock?.hide()
-  Menu.setApplicationMenu(null)
+// Single-instance lock only in packaged builds — dev runs alongside prod
+// for testing without stealing the global hotkey or fighting over state.
+if (app.isPackaged && !app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    try {
+      registry.get<WindowModule>('window').show()
+    } catch (e) {
+      console.warn('[rift] second-instance: window not ready', e)
+    }
+  })
 
-  // Register order matters: tray/hotkey/ipc resolve other modules during
-  // bootstrap, so their dependencies must be registered (not yet bootstrapped) first.
-  registry.register('settings', new SettingsModule())
-  registry.register('apps', new AppsModule())
-  registry.register('updater', new UpdaterModule(registry))
-  registry.register('window', new WindowModule(registry))
-  registry.register('tray', new TrayModule(registry))
-  registry.register('hotkey', new HotkeyModule(registry))
-  registry.register('ipc', new IpcModule(registry))
+  app.whenReady().then(async () => {
+    if (process.platform === 'darwin') app.dock?.hide()
+    Menu.setApplicationMenu(null)
 
-  for (const m of registry.all()) {
-    await m.bootstrap?.()
-  }
-})
+    // Register order matters: tray/hotkey/ipc resolve other modules during
+    // bootstrap, so their dependencies must be registered (not yet bootstrapped) first.
+    registry.register('settings', new SettingsModule())
+    registry.register('apps', new AppsModule())
+    registry.register('updater', new UpdaterModule(registry))
+    registry.register('window', new WindowModule(registry))
+    registry.register('tray', new TrayModule(registry))
+    registry.register('hotkey', new HotkeyModule(registry))
+    registry.register('ipc', new IpcModule(registry))
+
+    for (const m of registry.all()) {
+      await m.bootstrap?.()
+    }
+  })
+}
 
 app.on('will-quit', async () => {
   for (const m of registry.allReversed()) {

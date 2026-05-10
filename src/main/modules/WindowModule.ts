@@ -2,9 +2,13 @@ import { app, BrowserWindow, screen, shell } from 'electron'
 import { join } from 'node:path'
 import type { Module, ModuleRegistry } from '../core/ModuleRegistry'
 import type { UpdaterModule } from './UpdaterModule'
+import type { SettingsModule } from './SettingsModule'
+import type { WindowPosition } from '../store'
 
 const WIN_W = 760
 const WIN_H = 520
+const Y_RATIO = 0.20
+const MOVE_PERSIST_DEBOUNCE_MS = 400
 
 /**
  * WindowModule — single frameless transparent BrowserWindow + show/hide/
@@ -15,6 +19,9 @@ const WIN_H = 520
 export class WindowModule implements Module {
   private win: BrowserWindow | null = null
   private lastShownAt = 0
+  private moveTimer: NodeJS.Timeout | null = null
+  /** Suppress 'move' persistence during programmatic setPosition (show, recenter). */
+  private suppressMoveUntil = 0
 
   constructor(private reg: ModuleRegistry) {}
 
@@ -23,10 +30,61 @@ export class WindowModule implements Module {
     this.win?.once('ready-to-show', () => this.show())
   }
 
+  private alive(): boolean {
+    return !!this.win && !this.win.isDestroyed()
+  }
+
+  private ensure(): BrowserWindow {
+    if (!this.alive()) {
+      console.warn('[rift] window was destroyed — recreating')
+      this.create()
+    }
+    return this.win!
+  }
+
+  /** Returns the display the cursor currently lives on (Raycast-style multi-monitor). */
+  private activeDisplay(): Electron.Display {
+    return screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+  }
+
+  private defaultPosition(area: Electron.Rectangle): WindowPosition {
+    return {
+      x: Math.round(area.x + (area.width - WIN_W) / 2),
+      y: Math.round(area.y + area.height * Y_RATIO)
+    }
+  }
+
+  /** Returns remembered position for current display if it still fits, otherwise default. */
+  private positionForActiveDisplay(): WindowPosition {
+    const display = this.activeDisplay()
+    const settings = this.reg.get<SettingsModule>('settings')
+    const remembered = settings.get('windowPositions')[String(display.id)]
+    if (remembered && this.fitsWithin(remembered, display.workArea)) return remembered
+    return this.defaultPosition(display.workArea)
+  }
+
+  private fitsWithin(p: WindowPosition, area: Electron.Rectangle): boolean {
+    return (
+      p.x >= area.x &&
+      p.y >= area.y &&
+      p.x + WIN_W <= area.x + area.width &&
+      p.y + WIN_H <= area.y + area.height
+    )
+  }
+
+  private persistCurrentPosition(): void {
+    if (!this.alive()) return
+    const win = this.win!
+    const [x, y] = win.getPosition()
+    const display = screen.getDisplayNearestPoint({ x: x + WIN_W / 2, y: y + WIN_H / 2 })
+    const settings = this.reg.get<SettingsModule>('settings')
+    const next = { ...settings.get('windowPositions'), [String(display.id)]: { x, y } }
+    settings.set('windowPositions', next)
+    console.log('[rift] persisted window pos', { display: display.id, x, y })
+  }
+
   private create(): void {
-    const display = screen.getPrimaryDisplay().workArea
-    const x = Math.round(display.x + (display.width - WIN_W) / 2)
-    const y = Math.round(display.y + display.height * 0.13)
+    const { x, y } = this.positionForActiveDisplay()
 
     this.win = new BrowserWindow({
       width: WIN_W,
@@ -67,15 +125,21 @@ export class WindowModule implements Module {
       console.log('[renderer]', level, msg, '@', src + ':' + line)
     )
 
+    this.win.on('move', () => {
+      if (Date.now() < this.suppressMoveUntil) return
+      if (this.moveTimer) clearTimeout(this.moveTimer)
+      this.moveTimer = setTimeout(() => this.persistCurrentPosition(), MOVE_PERSIST_DEBOUNCE_MS)
+    })
+
     this.win.on('blur', () => {
-      if (!this.win) return
+      if (!this.alive()) return
       if (
         process.env['NODE_ENV'] === 'development' &&
-        this.win.webContents.isDevToolsOpened()
+        this.win!.webContents.isDevToolsOpened()
       )
         return
       const sinceShown = Date.now() - this.lastShownAt
-      console.log('[rift] blur — sinceShown:', sinceShown, 'visible:', this.win.isVisible())
+      console.log('[rift] blur — sinceShown:', sinceShown, 'visible:', this.win!.isVisible())
       if (sinceShown < 200) return
       this.hide()
     })
@@ -87,52 +151,52 @@ export class WindowModule implements Module {
   }
 
   show(): void {
-    if (!this.win) return
-    const display = screen.getPrimaryDisplay().workArea
-    const x = Math.round(display.x + (display.width - WIN_W) / 2)
-    const y = Math.round(display.y + display.height * 0.13)
-    this.win.setPosition(x, y)
+    const win = this.ensure()
+    const { x, y } = this.positionForActiveDisplay()
+    this.suppressMoveUntil = Date.now() + 200
+    win.setPosition(x, y)
     this.lastShownAt = Date.now()
     if (process.platform === 'darwin') app.focus({ steal: true })
-    this.win.setAlwaysOnTop(true, 'floating')
-    this.win.show()
-    this.win.moveTop()
-    this.win.focus()
-    this.win.webContents.send('launcher:show')
+    win.setAlwaysOnTop(true, 'floating')
+    win.show()
+    win.moveTop()
+    win.focus()
+    win.webContents.send('launcher:show')
 
     const updater = this.reg.get<UpdaterModule>('updater')
     if (updater.state() === 'ready' && updater.version()) {
-      this.win.webContents.send('launcher:update-ready', { version: updater.version() })
+      win.webContents.send('launcher:update-ready', { version: updater.version() })
     }
     updater.maybeCheck()
 
-    console.log('[rift] show — visible:', this.win.isVisible(), 'focused:', this.win.isFocused())
+    console.log('[rift] show — visible:', win.isVisible(), 'focused:', win.isFocused())
   }
 
   hide(opts?: { yieldFocus?: boolean }): void {
-    if (!this.win) return
-    this.win.hide()
+    if (!this.alive()) return
+    const win = this.win!
+    win.hide()
     if (opts?.yieldFocus && process.platform === 'darwin') app.hide()
-    this.win.webContents.send('launcher:hide')
+    win.webContents.send('launcher:hide')
     console.log(
       '[rift] hide — yieldFocus:',
       !!opts?.yieldFocus,
       'visible after:',
-      this.win.isVisible()
+      win.isVisible()
     )
   }
 
   toggle(): void {
-    if (!this.win) return
-    const visible = this.win.isVisible()
-    const focused = this.win.isFocused()
+    const win = this.ensure()
+    const visible = win.isVisible()
+    const focused = win.isFocused()
     console.log('[rift] toggle — visible:', visible, 'focused:', focused)
     if (!visible) {
       this.show()
     } else if (!focused) {
       if (process.platform === 'darwin') app.focus({ steal: true })
-      this.win.moveTop()
-      this.win.focus()
+      win.moveTop()
+      win.focus()
     } else {
       this.hide({ yieldFocus: true })
     }
@@ -140,10 +204,10 @@ export class WindowModule implements Module {
 
   openSettings(): void {
     this.show()
-    this.win?.webContents.send('launcher:open-settings')
+    if (this.alive()) this.win!.webContents.send('launcher:open-settings')
   }
 
   webContents(): Electron.WebContents | undefined {
-    return this.win?.webContents
+    return this.alive() ? this.win!.webContents : undefined
   }
 }

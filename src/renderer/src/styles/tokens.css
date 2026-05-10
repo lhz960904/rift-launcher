@@ -81,14 +81,6 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  -webkit-app-region: drag;
-}
-.lx input,
-.lx button,
-.lx .row,
-.lx .set-row,
-.lx .lx-foot,
-.lx .lx-search {
   -webkit-app-region: no-drag;
 }
 
@@ -99,6 +91,11 @@ body {
   padding: 18px 22px;
   border-bottom: 0.5px solid var(--line-soft);
   min-height: 64px;
+  -webkit-app-region: drag;
+}
+.lx-search input,
+.lx-search button {
+  -webkit-app-region: no-drag;
 }
 .lx-search .ico {
   width: 22px;
