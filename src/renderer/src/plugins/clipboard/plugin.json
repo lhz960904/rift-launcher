@@ -1,0 +1,16 @@
+{
+  "id": "clipboard",
+  "name": "Clipboard History",
+  "icon": "logo.svg",
+  "description": "Browse and reuse past clipboard entries.",
+  "category": "Clipboard",
+  "commands": [
+    {
+      "name": "history",
+      "title": "Clipboard History",
+      "description": "View past clipboard entries",
+      "mode": "view",
+      "keywords": ["clipboard", "clip", "history", "paste", "剪贴板", "剪切板"]
+    }
+  ]
+}

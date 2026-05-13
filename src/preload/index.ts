@@ -49,6 +49,12 @@ const pluginApi = {
   clipboardCopy: (text: string): Promise<void> =>
     rpc('pluginApi.clipboard.copy', { text }),
   clipboardRead: (): Promise<string> => rpc('pluginApi.clipboard.read'),
+  clipboardHistory: (limit?: number): Promise<{ text: string; ts: number }[]> =>
+    rpc('pluginApi.clipboard.history', { limit }),
+  clipboardClearHistory: (): Promise<void> =>
+    rpc('pluginApi.clipboard.clearHistory'),
+  clipboardRemoveHistoryItem: (ts: number): Promise<void> =>
+    rpc('pluginApi.clipboard.removeHistoryItem', { ts }),
   shellOpenExternal: (url: string, appPath?: string): Promise<void> =>
     rpc('pluginApi.shell.openExternal', { url, appPath }),
   storageGet: (namespace: string, key: string): Promise<unknown> =>

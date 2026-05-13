@@ -8,6 +8,7 @@ import type { HotkeyModule } from './HotkeyModule'
 import type { UpdaterModule } from './UpdaterModule'
 import type { PluginApiModule } from './PluginApiModule'
 import type { PluginStorageModule } from './PluginStorageModule'
+import type { ClipboardHistoryModule } from './ClipboardHistoryModule'
 import type { SettingsShape } from '../store'
 
 /**
@@ -25,6 +26,7 @@ export class IpcModule implements Module {
     const updater = this.reg.get<UpdaterModule>('updater')
     const pluginApi = this.reg.get<PluginApiModule>('pluginApi')
     const pluginStorage = this.reg.get<PluginStorageModule>('pluginStorage')
+    const clipboardHistory = this.reg.get<ClipboardHistoryModule>('clipboardHistory')
 
     installRpcRouter()
 
@@ -73,6 +75,15 @@ export class IpcModule implements Module {
     )
     registerRpc('pluginApi.storage.keys', (payload: { namespace: string }) =>
       pluginStorage.keys(payload.namespace)
+    )
+
+    registerRpc('pluginApi.clipboard.history', (payload: { limit?: number }) =>
+      clipboardHistory.list(payload?.limit)
+    )
+    registerRpc('pluginApi.clipboard.clearHistory', () => clipboardHistory.clear())
+    registerRpc(
+      'pluginApi.clipboard.removeHistoryItem',
+      (payload: { ts: number }) => clipboardHistory.remove(payload.ts)
     )
   }
 }

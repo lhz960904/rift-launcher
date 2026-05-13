@@ -6,9 +6,19 @@
 
 import { rift } from './api'
 
+export type ClipEntry = {
+  text: string
+  ts: number
+}
+
 export const Clipboard = {
   copy: (text: string): Promise<void> => rift.pluginApi.clipboardCopy(text),
-  read: (): Promise<string> => rift.pluginApi.clipboardRead()
+  read: (): Promise<string> => rift.pluginApi.clipboardRead(),
+  history: (limit?: number): Promise<ClipEntry[]> =>
+    rift.pluginApi.clipboardHistory(limit),
+  clearHistory: (): Promise<void> => rift.pluginApi.clipboardClearHistory(),
+  removeHistoryItem: (ts: number): Promise<void> =>
+    rift.pluginApi.clipboardRemoveHistoryItem(ts)
 }
 
 export type OpenExternalOptions = {

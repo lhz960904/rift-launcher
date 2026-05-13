@@ -9,6 +9,7 @@ import { HotkeyModule } from './modules/HotkeyModule'
 import { IpcModule } from './modules/IpcModule'
 import { PluginApiModule } from './modules/PluginApiModule'
 import { PluginStorageModule } from './modules/PluginStorageModule'
+import { ClipboardHistoryModule } from './modules/ClipboardHistoryModule'
 
 const registry = new ModuleRegistry()
 
@@ -35,6 +36,7 @@ if (app.isPackaged && !app.requestSingleInstanceLock()) {
     registry.register('apps', new AppsModule())
     registry.register('pluginApi', new PluginApiModule())
     registry.register('pluginStorage', new PluginStorageModule())
+    registry.register('clipboardHistory', new ClipboardHistoryModule())
     registry.register('updater', new UpdaterModule(registry))
     registry.register('window', new WindowModule(registry))
     registry.register('tray', new TrayModule(registry))
