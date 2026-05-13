@@ -7,6 +7,8 @@ import { WindowModule } from './modules/WindowModule'
 import { TrayModule } from './modules/TrayModule'
 import { HotkeyModule } from './modules/HotkeyModule'
 import { IpcModule } from './modules/IpcModule'
+import { PluginApiModule } from './modules/PluginApiModule'
+import { PluginStorageModule } from './modules/PluginStorageModule'
 
 const registry = new ModuleRegistry()
 
@@ -31,6 +33,8 @@ if (app.isPackaged && !app.requestSingleInstanceLock()) {
     // bootstrap, so their dependencies must be registered (not yet bootstrapped) first.
     registry.register('settings', new SettingsModule())
     registry.register('apps', new AppsModule())
+    registry.register('pluginApi', new PluginApiModule())
+    registry.register('pluginStorage', new PluginStorageModule())
     registry.register('updater', new UpdaterModule(registry))
     registry.register('window', new WindowModule(registry))
     registry.register('tray', new TrayModule(registry))

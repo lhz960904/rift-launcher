@@ -11,6 +11,7 @@ export type AppEntry = {
   name: string
   path: string
   icon: string | null
+  urlSchemes: string[]
   aliases: string[]
   mruCount: number
   mruLastUsed: number
@@ -44,14 +45,34 @@ function subscribe<T = void>(
   return () => ipcRenderer.off(channel, fn)
 }
 
+const pluginApi = {
+  clipboardCopy: (text: string): Promise<void> =>
+    rpc('pluginApi.clipboard.copy', { text }),
+  clipboardRead: (): Promise<string> => rpc('pluginApi.clipboard.read'),
+  shellOpenExternal: (url: string, appPath?: string): Promise<void> =>
+    rpc('pluginApi.shell.openExternal', { url, appPath }),
+  storageGet: (namespace: string, key: string): Promise<unknown> =>
+    rpc('pluginApi.storage.get', { namespace, key }),
+  storageSet: (namespace: string, key: string, value: unknown): Promise<void> =>
+    rpc('pluginApi.storage.set', { namespace, key, value }),
+  storageRemove: (namespace: string, key: string): Promise<void> =>
+    rpc('pluginApi.storage.remove', { namespace, key }),
+  storageKeys: (namespace: string): Promise<string[]> =>
+    rpc('pluginApi.storage.keys', { namespace })
+}
+
 const api = {
   listApps: (): Promise<AppEntry[]> => rpc('apps.list'),
   rebuildAppIndex: (): Promise<{ count: number }> => rpc('apps.rebuild'),
   openApp: (path: string): Promise<void> => rpc('apps.open', path),
   hide: (): Promise<void> => rpc('launcher.hide'),
+  toggleDevTools: (): Promise<void> => rpc('launcher.toggleDevTools'),
   getSettings: (): Promise<Settings> => rpc('settings.get'),
   setSettings: (patch: Partial<Settings>): Promise<SetResult> => rpc('settings.set', patch),
   installUpdate: (): Promise<void> => rpc('update.install'),
+
+  // Plugin-facing capabilities — proxied through @rift/api shim in renderer.
+  pluginApi,
 
   // One-way push subscriptions (no envelope; envelope adds no value here).
   onShow: (cb: () => void) => subscribe('launcher:show', cb),

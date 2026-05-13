@@ -6,6 +6,8 @@ import type { AppsModule } from './AppsModule'
 import type { WindowModule } from './WindowModule'
 import type { HotkeyModule } from './HotkeyModule'
 import type { UpdaterModule } from './UpdaterModule'
+import type { PluginApiModule } from './PluginApiModule'
+import type { PluginStorageModule } from './PluginStorageModule'
 import type { SettingsShape } from '../store'
 
 /**
@@ -21,6 +23,8 @@ export class IpcModule implements Module {
     const window = this.reg.get<WindowModule>('window')
     const hotkey = this.reg.get<HotkeyModule>('hotkey')
     const updater = this.reg.get<UpdaterModule>('updater')
+    const pluginApi = this.reg.get<PluginApiModule>('pluginApi')
+    const pluginStorage = this.reg.get<PluginStorageModule>('pluginStorage')
 
     installRpcRouter()
 
@@ -42,6 +46,33 @@ export class IpcModule implements Module {
     })
 
     registerRpc('launcher.hide', () => window.hide({ yieldFocus: true }))
+    registerRpc('launcher.toggleDevTools', () => window.toggleDevTools())
     registerRpc('update.install', () => updater.installNow())
+
+    registerRpc('pluginApi.clipboard.copy', (payload: { text: string }) => {
+      pluginApi.copyToClipboard(payload.text)
+    })
+    registerRpc('pluginApi.clipboard.read', () => pluginApi.readClipboard())
+
+    registerRpc(
+      'pluginApi.shell.openExternal',
+      (payload: { url: string; appPath?: string }) =>
+        pluginApi.openExternal(payload.url, payload.appPath)
+    )
+
+    registerRpc('pluginApi.storage.get', (payload: { namespace: string; key: string }) =>
+      pluginStorage.get(payload.namespace, payload.key)
+    )
+    registerRpc(
+      'pluginApi.storage.set',
+      (payload: { namespace: string; key: string; value: unknown }) =>
+        pluginStorage.set(payload.namespace, payload.key, payload.value)
+    )
+    registerRpc('pluginApi.storage.remove', (payload: { namespace: string; key: string }) =>
+      pluginStorage.remove(payload.namespace, payload.key)
+    )
+    registerRpc('pluginApi.storage.keys', (payload: { namespace: string }) =>
+      pluginStorage.keys(payload.namespace)
+    )
   }
 }

@@ -148,6 +148,19 @@ body {
   border-radius: 50%;
   background: var(--accent);
 }
+.lx-arg-slot {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--accent-soft);
+  border: 0.5px solid var(--accent-line);
+  color: var(--accent);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
 
 .lx-section {
   padding: 14px 22px 6px;
@@ -243,6 +256,17 @@ body {
   display: flex;
   gap: 6px;
   align-items: center;
+}
+.row-category {
+  font-size: 11.5px;
+  color: var(--fg-4);
+  font-family: var(--font-ui);
+  flex-shrink: 0;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+.row.sel .row-category {
+  color: var(--fg-3);
 }
 
 .lx-foot {
@@ -494,4 +518,498 @@ body {
   border-radius: 8px;
   font-family: var(--font-mono);
   font-size: 11.5px;
+}
+
+/* Argument input mode (Raycast-style command argument) */
+.lx-search.arg-mode {
+  gap: 10px;
+  padding-left: 18px;
+}
+.lx-back-btn {
+  -webkit-app-region: no-drag;
+  background: var(--elev);
+  border: 0.5px solid var(--line);
+  border-radius: 7px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: var(--fg-2);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+.lx-back-btn:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+.lx-arg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  background: var(--elev);
+  border: 0.5px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--fg);
+  flex-shrink: 0;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  -webkit-app-region: no-drag;
+}
+.lx-arg-chip img {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  object-fit: contain;
+}
+.lx-arg-chip span:not(:has(img)) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.lx-arg-body {
+  flex: 1;
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+.lx-arg-hint {
+  font-size: 12.5px;
+  color: var(--fg-3);
+  font-family: var(--font-ui);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.lx-arg-template {
+  font-size: 12px;
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  padding: 10px 12px;
+  background: var(--elev);
+  border: 0.5px solid var(--line);
+  border-radius: 7px;
+  word-break: break-all;
+}
+
+/* Footer context (selected item) */
+.lx-foot-ctx {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fg-2);
+  font-weight: 500;
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+}
+.lx-foot-ctx-icon {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  line-height: 1;
+}
+.lx-foot-ctx-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.act-primary {
+  color: var(--fg);
+}
+.act-primary strong {
+  font-weight: 600;
+}
+
+/* Plugin host */
+.lx-plugin-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 0.5px solid var(--line-soft);
+  -webkit-app-region: drag;
+}
+.lx-plugin-back {
+  -webkit-app-region: no-drag;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: var(--elev);
+  border: 0.5px solid var(--line);
+  border-radius: 7px;
+  color: var(--fg-2);
+  cursor: pointer;
+  padding: 0;
+}
+.lx-plugin-back:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+.lx-plugin-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.lx-plugin-title {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--fg);
+  letter-spacing: -0.005em;
+}
+.lx-plugin-body {
+  flex: 1;
+  overflow: auto;
+  padding: 20px 22px;
+  -webkit-app-region: no-drag;
+}
+
+/* Calculator plugin */
+.calc {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.calc-input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 0.5px solid var(--line-soft);
+  outline: 0;
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--fg);
+  padding: 6px 0 12px;
+  letter-spacing: -0.01em;
+}
+.calc-input::placeholder {
+  color: var(--fg-4);
+  font-weight: 300;
+}
+.calc-result {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  min-height: 40px;
+  padding: 4px 0;
+}
+.calc-value {
+  color: var(--accent);
+}
+.calc-error {
+  color: oklch(0.78 0.16 22);
+  font-size: 18px;
+  font-weight: 400;
+}
+.calc-hint {
+  color: var(--fg-4);
+  font-size: 16px;
+  font-weight: 300;
+  font-family: var(--font-ui);
+}
+.calc-foot {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+
+/* Quick Link plugin */
+.ql-list,
+.ql-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ql-list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  color: var(--fg-3);
+  padding-bottom: 4px;
+}
+.ql-empty {
+  text-align: center;
+  padding: 36px 0 24px;
+}
+.ql-empty-title {
+  font-size: 14px;
+  color: var(--fg-2);
+  font-weight: 500;
+}
+.ql-empty-hint {
+  font-size: 12px;
+  color: var(--fg-4);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.ql-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ql-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--elev);
+  border: 0.5px solid var(--line);
+  border-radius: 8px;
+}
+.ql-item-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ql-item-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg);
+  letter-spacing: -0.005em;
+}
+.ql-item-url {
+  font-size: 11.5px;
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ql-item-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.ql-chip {
+  font-size: 10.5px;
+  padding: 2px 7px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 0.5px solid var(--accent-line);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+}
+.ql-chip.mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--elev);
+  color: var(--fg-2);
+  border-color: var(--line);
+}
+.ql-chip-icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  object-fit: contain;
+}
+.ql-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+.ql-hint {
+  font-size: 11px;
+  color: var(--fg-4);
+  font-family: var(--font-ui);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.ql-hint code {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 1px 5px;
+  background: var(--elev);
+  border-radius: 3px;
+  color: var(--fg-3);
+}
+.ql-hint-active {
+  color: var(--fg-3);
+}
+/* AppPicker — custom dropdown with icons */
+.ql-pick {
+  position: relative;
+  outline: 0;
+}
+.ql-pick-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--elev);
+  border: 0.5px solid var(--line);
+  border-radius: 7px;
+  color: var(--fg);
+  font-size: 13px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  text-align: left;
+  outline: 0;
+  transition: border-color 0.15s ease;
+}
+.ql-pick:focus-within .ql-pick-trigger,
+.ql-pick-trigger:focus {
+  border-color: var(--accent);
+}
+.ql-pick-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.ql-pick-icon-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  background: var(--elev);
+  border: 0.5px solid var(--line);
+}
+.ql-pick-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ql-pick-caret {
+  color: var(--fg-3);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.ql-pick-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--panel-2);
+  border: 0.5px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ql-pick-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.ql-pick-opt.hl {
+  background: var(--hover);
+  color: var(--fg);
+}
+.ql-pick-opt.sel {
+  color: var(--fg);
+}
+.ql-pick-opt.sel::after {
+  content: '✓';
+  color: var(--accent);
+  font-size: 11px;
+  margin-left: auto;
+  padding-left: 6px;
+}
+.ql-item-actions {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+.ql-btn {
+  font-size: 12px;
+  padding: 5px 11px;
+  background: var(--elev);
+  border: 0.5px solid var(--line);
+  border-radius: 6px;
+  color: var(--fg-2);
+  cursor: pointer;
+  font-family: var(--font-ui);
+}
+.ql-btn:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+.ql-btn.primary {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+.ql-btn.primary:hover {
+  background: var(--accent);
+  color: var(--panel);
+}
+.ql-btn.danger {
+  color: oklch(0.78 0.16 22);
+  border-color: oklch(0.72 0.16 22 / 0.4);
+}
+.ql-btn.danger:hover {
+  background: oklch(0.72 0.16 22 / 0.12);
+}
+.ql-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ql-edit-row label {
+  font-size: 11px;
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.ql-edit-row input {
+  padding: 8px 11px;
+  background: var(--elev);
+  border: 0.5px solid var(--line);
+  border-radius: 7px;
+  color: var(--fg);
+  font-size: 13px;
+  font-family: var(--font-ui);
+  outline: 0;
+  transition: border-color 0.15s ease;
+}
+.ql-edit-row input:focus {
+  border-color: var(--accent);
+}
+.ql-edit-row input::placeholder {
+  color: var(--fg-4);
+  font-weight: 300;
+}
+.ql-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
 }

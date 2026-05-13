@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="oklch(0.62 0.18 256)"/>
+  <g fill="#fff" font-family="-apple-system, system-ui, sans-serif" font-weight="600">
+    <text x="32" y="30" font-size="14" text-anchor="middle" opacity="0.85">1 2 3</text>
+    <text x="32" y="50" font-size="22" text-anchor="middle">＋−×÷</text>
+  </g>
+</svg>

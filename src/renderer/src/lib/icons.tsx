@@ -48,6 +48,7 @@ export const PowerIcon = wrap(
     <path d="M5.6 7.4a8 8 0 1 0 12.8 0" />
   </>
 )
+export const CodeIcon = wrap(<path d="m16 18 6-6-6-6M8 6l-6 6 6 6" />)
 export const RefreshIcon = wrap(
   <>
     <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />

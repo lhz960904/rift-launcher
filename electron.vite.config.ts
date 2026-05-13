@@ -17,6 +17,11 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src/renderer'),
+    resolve: {
+      alias: {
+        '@rift/api': resolve(__dirname, 'src/renderer/src/lib/rift-api')
+      }
+    },
     build: {
       rollupOptions: {
         input: { index: resolve(__dirname, 'src/renderer/index.html') }

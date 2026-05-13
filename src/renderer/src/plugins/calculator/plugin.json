@@ -1,0 +1,16 @@
+{
+  "id": "calculator",
+  "name": "Calculator",
+  "icon": "logo.svg",
+  "description": "Quick arithmetic. Enter to copy result.",
+  "category": "Calculator",
+  "commands": [
+    {
+      "name": "default",
+      "title": "Calculator",
+      "description": "Evaluate arithmetic expressions",
+      "mode": "view",
+      "keywords": ["calc", "calculator", "math", "compute", "计算"]
+    }
+  ]
+}

@@ -10,7 +10,10 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@rift/api": ["./src/renderer/src/lib/rift-api"]
+    }
   },
   "include": ["src/renderer/**/*"]
 }

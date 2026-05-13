@@ -25,6 +25,8 @@ export type AppEntry = {
   name: string
   path: string
   icon: string | null // data URL (data:image/png;base64,...)
+  /** URL schemes declared in Info.plist's CFBundleURLTypes (lowercased, deduped). */
+  urlSchemes: string[]
   aliases: string[]
   mruCount: number
   mruLastUsed: number
@@ -83,6 +85,22 @@ export function parseAppName(path: string, info: Record<string, unknown>): strin
     (info['CFBundleName'] as string) ||
     basename(path, '.app')
   )
+}
+
+/** Extract declared URL schemes (CFBundleURLTypes[].CFBundleURLSchemes[]). */
+export function parseUrlSchemes(info: Record<string, unknown>): string[] {
+  const types = info['CFBundleURLTypes']
+  if (!Array.isArray(types)) return []
+  const out = new Set<string>()
+  for (const t of types) {
+    if (!t || typeof t !== 'object') continue
+    const arr = (t as Record<string, unknown>)['CFBundleURLSchemes']
+    if (!Array.isArray(arr)) continue
+    for (const s of arr) {
+      if (typeof s === 'string') out.add(s.toLowerCase())
+    }
+  }
+  return Array.from(out)
 }
 
 /** 64x64 thumbnail via NSWorkspace → data URL. */

@@ -25,13 +25,15 @@ import {
   extractIcon,
   findAppsViaMdfind,
   parseAppName,
+  parseUrlSchemes,
   readInfoPlist,
   walkApps
 } from '../apps'
 
 // Bump when the on-disk shape changes incompatibly — load() will discard
 // caches with a different version and the next rescan rebuilds them.
-const SCHEMA_VERSION = 2
+// v3 (2026-05-13): added urlSchemes for URL-handler detection.
+const SCHEMA_VERSION = 3
 const WRITE_DEBOUNCE_MS = 500
 // Bundle id of Rift itself — used to filter self out of search results so
 // users never see two "Rift" entries (one in /Applications, one in any
@@ -44,6 +46,7 @@ export type CachedEntry = {
   name: string
   path: string
   icon: string | null
+  urlSchemes: string[]
   mtimeMs: number
 }
 
@@ -191,8 +194,9 @@ export class SearchIndex {
     if (!info) return
     if (info['CFBundleIdentifier'] === SELF_BUNDLE_ID) return // can't launch self
     const name = parseAppName(path, info)
+    const urlSchemes = parseUrlSchemes(info)
     const icon = await extractIcon(path)
-    this.cache.set(path, { id: path, name, path, icon, mtimeMs })
+    this.cache.set(path, { id: path, name, path, icon, urlSchemes, mtimeMs })
   }
 
   private scheduleWrite(): void {

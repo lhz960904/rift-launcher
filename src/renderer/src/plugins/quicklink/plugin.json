@@ -1,0 +1,16 @@
+{
+  "id": "quicklink",
+  "name": "Quick Link",
+  "icon": "logo.svg",
+  "description": "Save URLs and open them by keyword.",
+  "category": "Quicklink",
+  "commands": [
+    {
+      "name": "manage",
+      "title": "Quick Link",
+      "description": "Manage saved quick links",
+      "mode": "view",
+      "keywords": ["quicklink", "ql", "link", "links", "bookmark"]
+    }
+  ]
+}

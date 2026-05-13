@@ -104,6 +104,14 @@ export class WindowModule implements Module {
       alwaysOnTop: true,
       hasShadow: true,
       roundedCorners: true,
+      // NSPanel-style window (NSWindowStyleMaskNonactivatingPanel under the
+      // hood). This is what Raycast / Alfred use. Critically: panel windows
+      // are *not* pulled into the Spaces switching animation, so triple-finger
+      // swiping between fullscreen Spaces no longer flashes the launcher in
+      // the destination Space. Also lets the window receive keyboard input
+      // without forcing app activation.
+      type: 'panel',
+      hiddenInMissionControl: true,
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
         contextIsolation: true,
@@ -111,7 +119,10 @@ export class WindowModule implements Module {
         sandbox: false
       }
     })
-    this.win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+    this.win.setVisibleOnAllWorkspaces(true, {
+      visibleOnFullScreen: true,
+      skipTransformProcessType: true
+    })
 
     if (process.env['ELECTRON_RENDERER_URL']) {
       this.win.loadURL(process.env['ELECTRON_RENDERER_URL'])
@@ -125,6 +136,27 @@ export class WindowModule implements Module {
       console.log('[renderer]', level, msg, '@', src + ':' + line)
     )
 
+    // Application menu is suppressed, so the standard ⌥⌘I shortcut for
+    // DevTools no longer fires. Re-bind it (plus F12) at the webContents
+    // level. Available in both dev and packaged — useful when debugging
+    // a plugin issue on a friend's machine.
+    this.win.webContents.on('before-input-event', (_e, input) => {
+      if (input.type !== 'keyDown') return
+      // Use input.code (physical key) — input.key is unreliable when modifiers
+      // produce dead keys (e.g. ⌥I = ˆ on US layout).
+      const code = input.code
+      const isToggleCombo =
+        (process.platform === 'darwin' && input.meta && input.alt && code === 'KeyI') ||
+        (process.platform !== 'darwin' &&
+          input.control &&
+          input.shift &&
+          code === 'KeyI') ||
+        code === 'F12'
+      if (isToggleCombo) {
+        this.toggleDevTools()
+      }
+    })
+
     this.win.on('move', () => {
       if (Date.now() < this.suppressMoveUntil) return
       if (this.moveTimer) clearTimeout(this.moveTimer)
@@ -133,11 +165,9 @@ export class WindowModule implements Module {
 
     this.win.on('blur', () => {
       if (!this.alive()) return
-      if (
-        process.env['NODE_ENV'] === 'development' &&
-        this.win!.webContents.isDevToolsOpened()
-      )
-        return
+      // Keep the window pinned whenever DevTools are open (regardless of
+      // dev/prod) so inspecting the renderer doesn't immediately hide it.
+      if (this.win!.webContents.isDevToolsOpened()) return
       const sinceShown = Date.now() - this.lastShownAt
       console.log('[rift] blur — sinceShown:', sinceShown, 'visible:', this.win!.isVisible())
       if (sinceShown < 200) return
@@ -209,5 +239,10 @@ export class WindowModule implements Module {
 
   webContents(): Electron.WebContents | undefined {
     return this.alive() ? this.win!.webContents : undefined
+  }
+
+  toggleDevTools(): void {
+    if (!this.alive()) return
+    this.win!.webContents.toggleDevTools()
   }
 }
