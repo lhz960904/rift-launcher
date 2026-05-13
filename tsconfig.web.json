@@ -12,7 +12,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "paths": {
-      "@rift/api": ["./src/renderer/src/lib/rift-api"]
+      "@rift/api": ["./src/renderer/src/lib/rift-api"],
+      "@/*": ["./src/renderer/src/*"]
     }
   },
   "include": ["src/renderer/**/*"]

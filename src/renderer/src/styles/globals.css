@@ -1,0 +1,72 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./tokens.css";
+
+/* Dark variant — our app uses [data-theme="dark"] (default) or [data-theme="light"].
+   Tailwind v4 needs an explicit variant declaration for class-style `dark:` modifiers. */
+@custom-variant dark (&:where(:not([data-theme="light"]) *));
+
+/*
+ * @theme inline — exposes our existing OKLCH design tokens (defined in
+ * tokens.css under :root / [data-theme="light"]) as Tailwind utility classes.
+ *
+ * `inline` keeps var() references verbatim in the generated CSS so theme
+ * switching via [data-theme] keeps working at runtime.
+ *
+ * shadcn semantic vars (--color-background, --color-primary, etc.) all
+ * resolve to our raw tokens. No name collision with our raw vars because
+ * shadcn references Tailwind utility classes (bg-primary, text-accent-foreground)
+ * which under the hood read `--color-X`, not `--X` directly.
+ */
+@theme inline {
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-mono);
+
+  /* shadcn semantic palette */
+  --color-background: var(--panel);
+  --color-foreground: var(--fg);
+  --color-card: var(--elev);
+  --color-card-foreground: var(--fg);
+  --color-popover: var(--panel-2);
+  --color-popover-foreground: var(--fg);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--panel);
+  --color-secondary: var(--elev);
+  --color-secondary-foreground: var(--fg);
+  --color-muted: var(--elev);
+  --color-muted-foreground: var(--fg-3);
+  --color-accent: var(--selected);
+  --color-accent-foreground: var(--fg);
+  --color-destructive: oklch(0.78 0.16 22);
+  --color-destructive-foreground: var(--fg);
+  /* shadcn `border-*` / `border-input` utilities map to our SOFT line; the
+     raw `border-line` utility (defined below) is still available when we want
+     the heavier line. */
+  --color-border: var(--line-soft);
+  --color-input: var(--line-soft);
+  --color-ring: var(--accent);
+
+  /* Direct tokens — `bg-panel`, `text-fg-2`, `border-line-soft`, etc. */
+  --color-bg-desk: var(--bg-desk);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-elev: var(--elev);
+  --color-hover: var(--hover);
+  --color-selected: var(--selected);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-fg-4: var(--fg-4);
+  --color-brand: var(--accent);
+  --color-brand-soft: var(--accent-soft);
+  --color-brand-line: var(--accent-line);
+
+  /* Radius — match shadcn convention, base 10px to match our existing visual. */
+  --radius: 0.625rem;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}

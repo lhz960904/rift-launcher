@@ -1,9 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useState } from 'react'
+import { Check, ChevronDown, Globe } from 'lucide-react'
 import type { AppEntry } from '@rift/api'
-
-type Option = { path: string; name: string; icon: string | null }
-
-const DEFAULT_OPTION: Option = { path: '', name: 'Default browser', icon: null }
+import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 type Props = {
   apps: AppEntry[]
@@ -11,113 +18,89 @@ type Props = {
   onChange: (path: string) => void
 }
 
+const DEFAULT_LABEL = 'Default browser'
+
+function Icon({ src, className }: { src?: string | null; className?: string }) {
+  if (src) {
+    return <img src={src} alt="" className={className} draggable={false} />
+  }
+  return <Globe className={className} />
+}
+
 export function AppPicker({ apps, value, onChange }: Props) {
   const [open, setOpen] = useState(false)
-  const [highlight, setHighlight] = useState(0)
-  const rootRef = useRef<HTMLDivElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  const options: Option[] = useMemo(
-    () => [DEFAULT_OPTION, ...apps.map((a) => ({ path: a.path, name: a.name, icon: a.icon }))],
-    [apps]
-  )
-  const selected = options.find((o) => o.path === value) ?? DEFAULT_OPTION
-
-  useEffect(() => {
-    if (!open) return
-    const idx = options.findIndex((o) => o.path === value)
-    setHighlight(idx >= 0 ? idx : 0)
-  }, [open, value, options])
-
-  useEffect(() => {
-    if (!open) return
-    const el = menuRef.current?.querySelector<HTMLElement>(
-      `[data-pick-idx="${highlight}"]`
-    )
-    el?.scrollIntoView({ block: 'nearest' })
-  }, [open, highlight])
-
-  useEffect(() => {
-    if (!open) return
-    const onDocDown = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onDocDown)
-    return () => document.removeEventListener('mousedown', onDocDown)
-  }, [open])
-
-  const pick = (path: string) => {
-    onChange(path)
-    setOpen(false)
-  }
-
-  const onKey = (e: React.KeyboardEvent) => {
-    if (!open) {
-      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
-        e.preventDefault()
-        setOpen(true)
-      }
-      return
-    }
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      e.stopPropagation()
-      setOpen(false)
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setHighlight((h) => Math.min(options.length - 1, h + 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setHighlight((h) => Math.max(0, h - 1))
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      pick(options[highlight].path)
-    }
-  }
-
-  const renderIcon = (opt: Option) =>
-    opt.icon ? (
-      <img className="ql-pick-icon" src={opt.icon} alt="" draggable={false} />
-    ) : (
-      <span className="ql-pick-icon ql-pick-icon-fallback">🌐</span>
-    )
+  const selected = apps.find((a) => a.path === value)
 
   return (
-    <div className="ql-pick" ref={rootRef} onKeyDown={onKey} tabIndex={0}>
-      <button
-        type="button"
-        className="ql-pick-trigger"
-        onClick={() => setOpen((o) => !o)}
-      >
-        {renderIcon(selected)}
-        <span className="ql-pick-name">{selected.name}</span>
-        <span className="ql-pick-caret">▾</span>
-      </button>
-      {open && (
-        <div className="ql-pick-menu" ref={menuRef} role="listbox">
-          {options.map((opt, i) => (
-            <div
-              key={opt.path || 'default'}
-              data-pick-idx={i}
-              role="option"
-              aria-selected={opt.path === value}
-              className={
-                'ql-pick-opt' +
-                (i === highlight ? ' hl' : '') +
-                (opt.path === value ? ' sel' : '')
-              }
-              onMouseEnter={() => setHighlight(i)}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                pick(opt.path)
-              }}
-            >
-              {renderIcon(opt)}
-              <span className="ql-pick-name">{opt.name}</span>
-            </div>
-          ))}
-        </div>
-      )}
+    <div
+      // While popover is open, swallow Escape so Launcher's onKeyDown doesn't
+      // exit the plugin view too. Radix portals content but events still
+      // bubble through the React tree to this wrapper.
+      onKeyDown={(e) => {
+        if (open && e.key === 'Escape') e.stopPropagation()
+      }}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between font-normal h-9"
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <Icon
+                src={selected?.icon}
+                className="size-[18px] rounded shrink-0 opacity-90"
+              />
+              <span className="truncate">
+                {selected ? selected.name : DEFAULT_LABEL}
+              </span>
+            </span>
+            <ChevronDown className="size-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-[var(--radix-popover-trigger-width)] p-0"
+          align="start"
+        >
+          <Command>
+            <CommandInput placeholder="Search apps…" />
+            <CommandList>
+              <CommandEmpty>No app found.</CommandEmpty>
+              <CommandGroup>
+                <CommandItem
+                  value="__default__ default browser"
+                  onSelect={() => {
+                    onChange('')
+                    setOpen(false)
+                  }}
+                >
+                  <Globe className="size-[18px] opacity-70" />
+                  <span className="flex-1 truncate">{DEFAULT_LABEL}</span>
+                  {value === '' && <Check className="size-4 text-primary" />}
+                </CommandItem>
+                {apps.map((a) => (
+                  <CommandItem
+                    key={a.path}
+                    value={`${a.name} ${a.path}`}
+                    onSelect={() => {
+                      onChange(a.path)
+                      setOpen(false)
+                    }}
+                  >
+                    <Icon src={a.icon} className="size-[18px] rounded shrink-0" />
+                    <span className="flex-1 truncate">{a.name}</span>
+                    {value === a.path && (
+                      <Check className="size-4 text-primary" />
+                    )}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }

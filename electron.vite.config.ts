@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   main: {
@@ -19,7 +20,8 @@ export default defineConfig({
     root: resolve(__dirname, 'src/renderer'),
     resolve: {
       alias: {
-        '@rift/api': resolve(__dirname, 'src/renderer/src/lib/rift-api')
+        '@rift/api': resolve(__dirname, 'src/renderer/src/lib/rift-api'),
+        '@': resolve(__dirname, 'src/renderer/src')
       }
     },
     build: {
@@ -27,6 +29,6 @@ export default defineConfig({
         input: { index: resolve(__dirname, 'src/renderer/index.html') }
       }
     },
-    plugins: [react()]
+    plugins: [react(), tailwindcss()]
   }
 })
